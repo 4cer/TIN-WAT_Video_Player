@@ -10,7 +10,7 @@
         <Vlc:VlcControl xmlns:Vlc="clr-namespace:Vlc.DotNet.Wpf;assembly=Vlc.DotNet.Wpf" x:Name="VlcControl" Margin="10,10,10,90" />
         <Button x:Name="ButtonPlayPause" Content="▶" HorizontalAlignment="Left" Margin="294,712,0,0" VerticalAlignment="Top" Height="40" Width="40" FontSize="30" Click="ButtonPlayPause_Click" FontFamily="Arial" ToolTip="Odtwórz lub zatrzymaj film"/>
         <Button x:Name="ButtonStop" Content="■" HorizontalAlignment="Left" Margin="339,712,0,0" VerticalAlignment="Top" Width="40" Height="40" FontSize="24" Click="ButtonStop_Click" FontFamily="Segoe UI Black" ToolTip="Przerwij odtwarzanie i ustaw głowicę na początek"/>
-        <Slider x:Name="SliderPlayBar" HorizontalAlignment="Left" Margin="384,722,0,0" VerticalAlignment="Top" Width="782" Height="20" FontSize="24" RenderTransformOrigin="0.5,0.5" ValueChanged="SliderPlayBar_ValueChanged" Visibility="Hidden" >
+        <Slider x:Name="SliderPlayBar" HorizontalAlignment="Left" Margin="384,722,0,0" VerticalAlignment="Top" Width="782" Height="20" FontSize="24" RenderTransformOrigin="0.5,0.5" ValueChanged="SliderPlayBar_ValueChanged" Visibility="Visible" >
             <Slider.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform ScaleY="2"/>

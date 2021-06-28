@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -26,7 +27,7 @@ namespace KlientTIN
 
         private static Boolean listSuccess = false;
 
-        private static System.Timers.Timer realTimer;
+        private static Timer realTimer;
 
         private static Boolean fileEnd = false;
         private static double playHead = 0;
@@ -61,10 +62,12 @@ namespace KlientTIN
                 case "▶":
                     ButtonPlayPause.Content = "⏸";
                     this.VlcControl.SourceProvider.MediaPlayer.Play();
+                    realTimer.Enabled = true;
                     break;
                 case "⏸":
                     ButtonPlayPause.Content = "▶";
                     this.VlcControl.SourceProvider.MediaPlayer.Pause();
+                    realTimer.Enabled = false;
                     break;
             }
 
@@ -73,10 +76,10 @@ namespace KlientTIN
 
         private void ButtonStop_Click(object sender, RoutedEventArgs e)
         {
-            this.VlcControl.SourceProvider.MediaPlayer.Stop();
+            //this.VlcControl.SourceProvider.MediaPlayer.Stop();
         }
 
-        private void ComboBoxSelectFile_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void ComboBoxSelectFile_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             StreamerService.StreamerServiceClient client = new StreamerService.StreamerServiceClient();
 
@@ -87,10 +90,28 @@ namespace KlientTIN
                     double max = client.GetFilmLen((string)ComboBoxSelectFile.SelectedItem);
                     SliderPlayBar.Maximum = max;
                     LabelTimeMax.Content = TimeSpan.FromSeconds(max).ToString("hh':'mm':'ss");
-                    stream = client.GetStream((string)ComboBoxSelectFile.SelectedItem);
+                    stream = await client.GetStreamAsync((string)ComboBoxSelectFile.SelectedItem);
 
-                    this.VlcControl.SourceProvider.MediaPlayer.Play(stream);
-                    this.VlcControl.SourceProvider.MediaPlayer.Pause();
+                    string path = @"D:\Videos\vid\down\" + ComboBoxSelectFile.Text;
+
+                    if (File.Exists(path))
+                        File.Delete(path);
+
+                    using (FileStream fs = File.Create(path))
+                    {
+                        stream.CopyTo(fs);
+                    }
+
+                    Uri src = new Uri(path);
+                    
+                    //this.VlcControl.SourceProvider.MediaPlayer.Play(stream);
+                    this.VlcControl.SourceProvider.MediaPlayer.SetMedia(src);
+                    this.VlcControl.SourceProvider.MediaPlayer.Play();
+                    this.VlcControl.SourceProvider.MediaPlayer.EndReached += MediaPlayer_EndReached;
+
+                    SetTimer();
+
+                    ButtonPlayPause.Content = "⏸";
                 } else
                 {
                     SliderPlayBar.Maximum = 1;
@@ -109,6 +130,11 @@ namespace KlientTIN
             }
         }
 
+        private void MediaPlayer_EndReached(object sender, Vlc.DotNet.Core.VlcMediaPlayerEndReachedEventArgs e)
+        {
+            realTimer.Enabled = false;
+        }
+
         private void SliderPlayBar_ManipulationCompleted(object sender, ManipulationCompletedEventArgs e)
         {
             //LabelTimeCurrent.Content = TimeSpan.FromSeconds(SliderPlayBar.Value).ToString("hh':'mm':'ss");
@@ -124,6 +150,7 @@ namespace KlientTIN
         {
             //LabelTimeCurrent.Content = SliderPlayBar.Value;
             LabelTimeCurrent.Content = TimeSpan.FromSeconds(SliderPlayBar.Value).ToString("hh':'mm':'ss");
+            this.VlcControl.SourceProvider.MediaPlayer.Time = (long)SliderPlayBar.Value*1000;
         }
 
         /* SHARED METHODS */
@@ -151,6 +178,19 @@ namespace KlientTIN
             }
 
             ComboBoxSelectFile.ItemsSource = filmList;
+        }
+
+        private void SetTimer()
+        {
+            realTimer = new Timer(1000);
+            realTimer.AutoReset = true;
+            realTimer.Elapsed += RealTimer_Elapsed;
+            realTimer.Enabled = true;
+        }
+
+        private void RealTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            //
         }
     }
 }
